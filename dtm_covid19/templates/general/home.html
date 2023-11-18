@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1 style="margin: auto; text-align: center;"> Welcome {{ name }}! </h1>
+    <div class="content-section">
+        <div class="btn-group">
+            <div>
+                <span style="margin: auto; text-align: center;">Health Status: </span>
+                <button type="button" class="btn btn-{{ state }} dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                {{ status }}
+                </button>
+                <div class="dropdown-menu">
+                    <form method="POST" action="{{ url_for('home') }}">
+                        <input class="dropdown-item" type="submit" name="green" value="Green" onclick="return confirm('Are you sure you want to change your covid-19 health status?')">
+                    </form>
+                    <form method="POST" action="{{ url_for('home') }}">
+                        <input class="dropdown-item" type="submit" name="yellow" value="Yellow" onclick="return confirm('Are you sure you want to change your covid-19 health status?')">
+                    </form>
+                    <form method="POST" action="{{ url_for('home') }}">
+                        <input class="dropdown-item" type="submit" name="red" value="Red" onclick="return confirm('Are you sure you want to change your covid-19 health status?')">
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class='map-section mb-4'>
+            {% include "general/map.html" %}
+        </div>
+    </div>
+{% endblock %}

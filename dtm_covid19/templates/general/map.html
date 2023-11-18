@@ -1,0 +1,95 @@
+<div id="basic_map" style="width:100%;height:240px;"></div>
+<div id="trackGPS">
+	<button class="location" id="autotrack" onClick="watchGPS()">Autotrack Off</button>
+</div>
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJYs9Qf65MRIdtiDER9FOp2ggsa5Lu1Qk"></script>
+<script>
+	var updateLocation;
+	var lat;
+	var lon;
+
+	getGPSLatLng();
+
+	/*This function is used to retrieve GPS coordinates and pass them to a
+	function, which in turn initializes a Google Map centered on the current
+	location of the device.*/
+	function getGPSLatLng() {
+		navigator.geolocation.getCurrentPosition(successGPSLatLng,errorGPS,{enableHighAccuracy : true});
+	}
+
+	function successGPS(position) {
+		//store the location latitude and longtitude info
+		lat=position.coords.latitude;
+		lon=position.coords.longitude;
+	    var latlon = {"lat":lat, "lon":lon};
+	    console.log(latlon)   
+	    $.ajax({
+	      url: "/latlon",
+	      type: "POST",
+	      contentType: "application/json",
+	      datatype: "json",
+	      data: JSON.stringify(latlon), 
+	    });
+	}
+	/* This function is invoked when there is an error in reading GPS info*/
+	function errorGPS() {
+		alert("GPS Error");
+	}
+
+	/*This function provide continuous feedback. It returns GPS coordinates to
+	the callback function approximately once per second and stores them in a
+	global variable.
+	Note that this function consumes a lot of battery life.*/
+	function watchGPS() {
+		x = document.getElementById('autotrack')
+		if (x.innerHTML == 'Autotrack Off') {
+			x.innerHTML = 'Autotrack On';
+			updateLocation=navigator.geolocation.watchPosition(successGPS, errorGPS, {enableHighAccuracy : true});
+			getGPSLatLng();
+		}
+		else {
+			navigator.geolocation.clearWatch(updateLocation);
+			x.innerHTML = 'Autotrack Off';
+		}
+	}
+
+	/*This function initializes a Google Map object centered on the current
+	location of the device */
+	function successGPSLatLng(position) {
+		//store current latitude and longitude information
+		lat = position.coords.latitude;
+		lon = position.coords.longitude;
+		//create a new google.maps.LatLng object
+		var latlng=new google.maps.LatLng(lat,lon);
+		//set Google Map options
+		var myOptions = {
+			zoom: 15,
+			center: latlng,
+			mapTypeId: google.maps.MapTypeId.ROADMAP
+		}
+		//create a new map, pass its <div> container as parameter
+		var map = new google.maps.Map(document.getElementById("basic_map"), myOptions);
+
+		req = $.ajax({
+		  url : '/post/infected_areas',
+		  type : 'POST',
+		});
+
+		req.done(function(data) {
+			for (i = 0; i < data['latlon'].length; i++) {
+
+				// Add the circle for this city to the map.
+				const cityCircle = new google.maps.Circle({
+					strokeColor: "#FF0000",
+					strokeOpacity: 0.8,
+					strokeWeight: 2,
+					fillColor: "#FF0000",
+					fillOpacity: 0.35,
+					map,
+					center: { lat: data['latlon'][i][0], lng: data['latlon'][i][1] },
+					radius: 10
+				});
+			}
+		});
+	}
+</script>
